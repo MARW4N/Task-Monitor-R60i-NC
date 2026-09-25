@@ -53,21 +53,36 @@ if not defined MSBUILD (
 
 echo [OK] Using MSBuild: "!MSBUILD!"
 echo.
-echo Compiling TaskbarMonitor.sln in Release mode...
+echo [1/3] Compiling TaskbarMonitor.dll and TaskbarMonitorWindows11.exe...
 echo.
 
-"!MSBUILD!" "%~dp0TaskbarMonitor.sln" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
-
+"!MSBUILD!" "%~dp0TaskbarMonitor\TaskbarMonitor.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
 if %ERRORLEVEL% neq 0 (
-    echo.
-    echo [ERROR] Build failed. Please review compiler error output above.
+    echo [ERROR] Failed to compile TaskbarMonitor.dll
+    pause
+    exit /b %ERRORLEVEL%
+)
+
+"!MSBUILD!" "%~dp0TaskbarMonitorWindows11\TaskbarMonitorWindows11.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
+if %ERRORLEVEL% neq 0 (
+    echo [ERROR] Failed to compile TaskbarMonitorWindows11.exe
     pause
     exit /b %ERRORLEVEL%
 )
 
 echo.
+echo [2/3] Preparing Installer Resources...
+if not exist "%~dp0TaskbarMonitorInstaller\Resources" mkdir "%~dp0TaskbarMonitorInstaller\Resources"
+copy /y "%~dp0TaskbarMonitor\bin\Release\TaskbarMonitor.dll" "%~dp0TaskbarMonitorInstaller\Resources\" >nul
+copy /y "%~dp0TaskbarMonitor\bin\Release\Newtonsoft.Json.dll" "%~dp0TaskbarMonitorInstaller\Resources\" >nul
+copy /y "%~dp0TaskbarMonitorWindows11\bin\Release\TaskbarMonitorWindows11.exe" "%~dp0TaskbarMonitorInstaller\Resources\" >nul
+
+echo [3/3] Compiling TaskbarMonitorInstaller.exe...
+"!MSBUILD!" "%~dp0TaskbarMonitorInstaller\TaskbarMonitorInstaller.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
+
+echo.
 echo ========================================================
-echo   Build Successful! Preparing files...
+echo   Build Successful! Preparing release package...
 echo ========================================================
 echo.
 
@@ -77,9 +92,13 @@ if not exist "%DIST%" mkdir "%DIST%"
 copy /y "%~dp0TaskbarMonitorWindows11\bin\Release\TaskbarMonitorWindows11.exe" "%DIST%\" >nul
 copy /y "%~dp0TaskbarMonitor\bin\Release\TaskbarMonitor.dll" "%DIST%\" >nul
 copy /y "%~dp0TaskbarMonitor\bin\Release\Newtonsoft.Json.dll" "%DIST%\" >nul
+if exist "%~dp0TaskbarMonitorInstaller\bin\Release\TaskbarMonitorInstaller.exe" (
+    copy /y "%~dp0TaskbarMonitorInstaller\bin\Release\TaskbarMonitorInstaller.exe" "%DIST%\" >nul
+)
 
 echo Files created in: "%DIST%"
 echo   - TaskbarMonitorWindows11.exe (Windows 11 Taskbar App)
+echo   - TaskbarMonitorInstaller.exe (1-Click Installer)
 echo   - TaskbarMonitor.dll (CSDeskBand Component)
 echo   - Newtonsoft.Json.dll
 echo.
