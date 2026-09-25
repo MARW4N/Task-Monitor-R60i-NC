@@ -1,0 +1,49 @@
+========================================================================
+TASKBAR MONITOR + SOUNDCORE BATTERY - INSTALLATION GUIDE (WINDOWS 11 & 10)
+========================================================================
+
+------------------------------------------------------------------------
+A. AUTOMATIC GITHUB RELEASES (NO VISUAL STUDIO NEEDED)
+------------------------------------------------------------------------
+This repository is configured with a GitHub Actions build workflow (.github/workflows/build-release.yml).
+Whenever you push to your GitHub repository or create a release:
+1. Go to your GitHub repository's "Releases" page (or the "Actions" tab).
+2. Download the compiled "TaskbarMonitor-Windows11-Soundcore.zip" or "TaskbarMonitorWindows11.exe".
+3. Extract and run "TaskbarMonitorWindows11.exe"!
+
+------------------------------------------------------------------------
+B. 1-CLICK BUILD ON YOUR WINDOWS PC
+------------------------------------------------------------------------
+If you have Visual Studio 2019/2022 or .NET build tools installed:
+1. Double-click the included "Build-Windows.bat" file in the root folder.
+2. The script will automatically locate MSBuild, compile the entire solution in Release mode, and output the binaries into "TaskbarMonitor_Release\".
+3. When prompted, press "Y" to launch Taskbar Monitor immediately and "Y" to add it to your Windows Startup folder (shell:startup) so it runs on boot.
+
+------------------------------------------------------------------------
+C. MANUAL BUILD (VISUAL STUDIO)
+------------------------------------------------------------------------
+1. Open "TaskbarMonitor.sln" in Visual Studio 2019 or 2022.
+2. Set the configuration to "Release" and "Any CPU".
+3. Press Ctrl + Shift + B (Build > Build Solution).
+4. Run "TaskbarMonitorWindows11\bin\Release\TaskbarMonitorWindows11.exe".
+
+------------------------------------------------------------------------
+D. SOUNDCORE EARBUDS CONFIGURATION
+------------------------------------------------------------------------
+1. Right-click the Taskbar Monitor widget docked next to your system clock.
+2. Click "Options..." to open the settings window.
+3. Click the "SOUNDCORE BATTERY" tab on the left menu.
+4. Verify your Bluetooth MAC address (default: 34:09:C9:AD:A9:20) and the path to openscq30.exe (default: F:\R60i NC Battery\openscq30.exe).
+5. Click "Test Connection" to verify live battery communication with your earbuds!
+6. Click "Apply" or "OK".
+
+------------------------------------------------------------------------
+E. WINDOWS 10 / CSDESKBAND TOOLBAR (LEGACY)
+------------------------------------------------------------------------
+On Windows 10 (or Windows 11 with ExplorerPatcher/StartAllBack):
+1. Open an Administrator Command Prompt.
+2. Navigate to your Release folder:
+   cd TaskbarMonitor\bin\Release
+3. Register the DeskBand COM component:
+   %SystemRoot%\Microsoft.NET\Framework64\v4.0.30319\regasm.exe /codebase TaskbarMonitor.dll
+4. Right-click the Windows Taskbar > Toolbars > check "taskbar-monitor".

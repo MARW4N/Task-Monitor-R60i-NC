@@ -1,0 +1,75 @@
+name: Build and Release Taskbar Monitor
+
+on:
+  push:
+    branches: [ "master", "main" ]
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild Path
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v2
+
+    - name: Restore NuGet Packages
+      run: nuget restore TaskbarMonitor.sln
+
+    - name: Build Solution (Release)
+      run: msbuild TaskbarMonitor.sln /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU"
+
+    - name: Prepare Release Artifacts
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Path ./release_dist
+        Copy-Item -Path TaskbarMonitorWindows11/bin/Release/TaskbarMonitorWindows11.exe -Destination ./release_dist/
+        Copy-Item -Path TaskbarMonitor/bin/Release/TaskbarMonitor.dll -Destination ./release_dist/
+        Copy-Item -Path TaskbarMonitor/bin/Release/Newtonsoft.Json.dll -Destination ./release_dist/
+        Copy-Item -Path README.md -Destination ./release_dist/
+        Compress-Archive -Path ./release_dist/* -DestinationPath ./TaskbarMonitor-Windows11-Soundcore.zip
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: TaskbarMonitor-Windows11-Soundcore
+        path: |
+          release_dist/TaskbarMonitorWindows11.exe
+          release_dist/TaskbarMonitor.dll
+          release_dist/Newtonsoft.Json.dll
+          TaskbarMonitor-Windows11-Soundcore.zip
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Taskbar Monitor with Soundcore Earbuds Battery Support
+        draft: false
+        prerelease: false
+        files: |
+          release_dist/TaskbarMonitorWindows11.exe
+          TaskbarMonitor-Windows11-Soundcore.zip
+        body: |
+          ## Taskbar Monitor with Soundcore P40i / R60i Battery Support
+          
+          ### Included:
+          - **`TaskbarMonitorWindows11.exe`**: Standalone executable for Windows 11 taskbar docking.
+          - **`TaskbarMonitor.dll`**: CSDeskBand extension assembly for Windows 10 or ExplorerPatcher.
+          - **`Newtonsoft.Json.dll`**: JSON dependency.
+          
+          ### Installation:
+          1. Extract `TaskbarMonitor-Windows11-Soundcore.zip` or run `TaskbarMonitorWindows11.exe`.
+          2. Ensure `openscq30.exe` is placed at `F:\R60i NC Battery\openscq30.exe` (or in the same directory).
+          3. Right-click the widget on your taskbar $\to$ **Options...** $\to$ **SOUNDCORE BATTERY** to configure settings.
