@@ -25,33 +25,30 @@ jobs:
       uses: nuget/setup-nuget@v2
 
     - name: Restore NuGet Packages
-      run: nuget restore TaskbarMonitor.sln -PackagesDirectory packages
+      run: nuget restore TaskbarMonitor.sln
 
-    - name: Step 1 - Build Core TaskbarMonitor DLL and Windows 11 App
-      shell: pwsh
-      run: |
-        msbuild TaskbarMonitor/TaskbarMonitor.csproj /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m
-        msbuild TaskbarMonitorWindows11/TaskbarMonitorWindows11.csproj /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m
+    - name: Compile Taskbar Monitor Solution
+      run: msbuild TaskbarMonitor.sln /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
 
-    - name: Step 2 - Populate Installer Resources & Build Installer
+    - name: Populate Installer Resources & Rebuild Installer
       shell: pwsh
       run: |
         if (!(Test-Path "TaskbarMonitorInstaller/Resources")) {
           New-Item -ItemType Directory -Path "TaskbarMonitorInstaller/Resources" -Force
         }
         Copy-Item -Path "TaskbarMonitor/bin/Release/TaskbarMonitor.dll" -Destination "TaskbarMonitorInstaller/Resources/" -Force
-        Copy-Item -Path "TaskbarMonitor/bin/Release/Newtonsoft.Json.dll" -Destination "TaskbarMonitorInstaller/Resources/" -Force
+        Copy-Item -Path "packages/Newtonsoft.Json.13.0.1/lib/net45/Newtonsoft.Json.dll" -Destination "TaskbarMonitorInstaller/Resources/Newtonsoft.Json.dll" -Force
         Copy-Item -Path "TaskbarMonitorWindows11/bin/Release/TaskbarMonitorWindows11.exe" -Destination "TaskbarMonitorInstaller/Resources/" -Force
         
-        msbuild TaskbarMonitorInstaller/TaskbarMonitorInstaller.csproj /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m
+        msbuild TaskbarMonitorInstaller/TaskbarMonitorInstaller.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /m /v:m
 
-    - name: Step 3 - Package Release Files
+    - name: Package Release Files
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Path ./release_dist -Force
         Copy-Item -Path "TaskbarMonitorWindows11/bin/Release/TaskbarMonitorWindows11.exe" -Destination "./release_dist/" -Force
         Copy-Item -Path "TaskbarMonitor/bin/Release/TaskbarMonitor.dll" -Destination "./release_dist/" -Force
-        Copy-Item -Path "TaskbarMonitor/bin/Release/Newtonsoft.Json.dll" -Destination "./release_dist/" -Force
+        Copy-Item -Path "packages/Newtonsoft.Json.13.0.1/lib/net45/Newtonsoft.Json.dll" -Destination "./release_dist/Newtonsoft.Json.dll" -Force
         if (Test-Path "TaskbarMonitorInstaller/bin/Release/TaskbarMonitorInstaller.exe") {
           Copy-Item -Path "TaskbarMonitorInstaller/bin/Release/TaskbarMonitorInstaller.exe" -Destination "./release_dist/" -Force
         }
@@ -63,23 +60,23 @@ jobs:
         }
         Compress-Archive -Path ./release_dist/* -DestinationPath ./TaskbarMonitor-Windows11-Soundcore.zip -Force
 
-    - name: Step 4 - Upload Build Artifacts
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: TaskbarMonitor-Windows11-Soundcore-Release
+        name: TaskbarMonitor-Windows11-Soundcore
         path: |
           ./release_dist/*
           ./TaskbarMonitor-Windows11-Soundcore.zip
 
-    - name: Step 5 - Create or Update GitHub Release
+    - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+      continue-on-error: true
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v0.5.4-soundcore' }}
-        name: Taskbar Monitor with Soundcore Earbuds Battery Support
+        tag_name: "v0.5.4-soundcore"
+        name: "Taskbar Monitor with Soundcore Earbuds Battery Support"
         draft: false
         prerelease: false
-        generate_release_notes: false
         files: |
           ./release_dist/TaskbarMonitorWindows11.exe
           ./release_dist/TaskbarMonitorInstaller.exe
@@ -88,12 +85,12 @@ jobs:
           ## Taskbar Monitor with Soundcore P40i / R60i Battery Support
           
           ### Download Options:
-          - **`TaskbarMonitorWindows11.exe`**: Ready-to-run Windows 11 standalone application. Docks right into your taskbar beside the system tray.
+          - **`TaskbarMonitorWindows11.exe`**: Ready-to-run Windows 11 standalone app. Docks into your taskbar beside the clock and system tray.
           - **`TaskbarMonitorInstaller.exe`**: 1-click self-extracting installer for Windows 11 and 10.
           - **`TaskbarMonitor-Windows11-Soundcore.zip`**: Complete archive including DLLs, manual batch files, and documentation.
           
           ### Quick Setup:
-          1. Run **`TaskbarMonitorWindows11.exe`** (or run `TaskbarMonitorInstaller.exe`).
-          2. Right-click the widget on the taskbar $\to$ **Options...** $\to$ **SOUNDCORE BATTERY**.
+          1. Run **`TaskbarMonitorWindows11.exe`** (or `TaskbarMonitorInstaller.exe`).
+          2. Right-click the widget on your taskbar $\to$ **Options...** $\to$ **SOUNDCORE BATTERY**.
           3. Confirm your Bluetooth MAC address (`34:09:C9:AD:A9:20`) and `openscq30.exe` path.
           4. Click **Test Connection** and click **Apply**!
