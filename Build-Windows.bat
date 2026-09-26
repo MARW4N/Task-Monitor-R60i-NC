@@ -56,14 +56,14 @@ echo.
 echo [1/3] Compiling TaskbarMonitor.dll and TaskbarMonitorWindows11.exe...
 echo.
 
-"!MSBUILD!" "%~dp0TaskbarMonitor\TaskbarMonitor.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
+"!MSBUILD!" "%~dp0TaskbarMonitor\TaskbarMonitor.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /m /v:m
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Failed to compile TaskbarMonitor.dll
     pause
     exit /b %ERRORLEVEL%
 )
 
-"!MSBUILD!" "%~dp0TaskbarMonitorWindows11\TaskbarMonitorWindows11.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
+"!MSBUILD!" "%~dp0TaskbarMonitorWindows11\TaskbarMonitorWindows11.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /m /v:m
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Failed to compile TaskbarMonitorWindows11.exe
     pause
@@ -78,7 +78,7 @@ copy /y "%~dp0TaskbarMonitor\bin\Release\Newtonsoft.Json.dll" "%~dp0TaskbarMonit
 copy /y "%~dp0TaskbarMonitorWindows11\bin\Release\TaskbarMonitorWindows11.exe" "%~dp0TaskbarMonitorInstaller\Resources\" >nul
 
 echo [3/3] Compiling TaskbarMonitorInstaller.exe...
-"!MSBUILD!" "%~dp0TaskbarMonitorInstaller\TaskbarMonitorInstaller.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="Any CPU" /m /v:m
+"!MSBUILD!" "%~dp0TaskbarMonitorInstaller\TaskbarMonitorInstaller.csproj" /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /m /v:m
 
 echo.
 echo ========================================================
