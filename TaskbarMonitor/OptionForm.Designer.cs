@@ -36,6 +36,7 @@ namespace TaskbarMonitor
             this.editHistorySize = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
             this.panelMenu = new System.Windows.Forms.Panel();
+            this.btnMenuSoundcore = new System.Windows.Forms.Button();
             this.btnMenuMultiMonitor = new System.Windows.Forms.Button();
             this.btnMenuAbout = new System.Windows.Forms.Button();
             this.btnMenuCounters = new System.Windows.Forms.Button();
