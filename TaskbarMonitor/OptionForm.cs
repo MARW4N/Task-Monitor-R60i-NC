@@ -52,16 +52,16 @@ namespace TaskbarMonitor
                 }
                 if (!opt.CounterOptions.ContainsKey("SOUNDCORE"))
                 {
-                    opt.CounterOptions.Add("SOUNDCORE", new CounterOptions
+                    opt.CounterOptions.Add("SOUNDCORE", new TaskbarMonitor.CounterOptions
                     {
-                        ShowTitle = CounterOptions.DisplayType.SHOW,
+                        ShowTitle = TaskbarMonitor.CounterOptions.DisplayType.SHOW,
                         Enabled = true,
-                        TitlePosition = CounterOptions.DisplayPosition.TOP,
+                        TitlePosition = TaskbarMonitor.CounterOptions.DisplayPosition.TOP,
                         ShowTitleShadowOnHover = true,
-                        ShowCurrentValue = CounterOptions.DisplayType.SHOW,
+                        ShowCurrentValue = TaskbarMonitor.CounterOptions.DisplayType.SHOW,
                         ShowCurrentValueShadowOnHover = true,
                         CurrentValueAsSummary = true,
-                        SummaryPosition = CounterOptions.DisplayPosition.BOTTOM,
+                        SummaryPosition = TaskbarMonitor.CounterOptions.DisplayPosition.BOTTOM,
                         InvertOrder = false,
                         SeparateScales = false,
                         GraphType = Counters.ICounter.CounterType.SINGLE,
@@ -192,9 +192,9 @@ namespace TaskbarMonitor
             ChosenCurrentValueFont = new Font(this.Theme.CurrentValueFont ?? "Calibri", this.Theme.CurrentValueSize > 0 ? this.Theme.CurrentValueSize : 7.25f, FontStyle.Bold);
             linkCurrentValueFont.Text = ChosenCurrentValueFont.Name + ", " + Math.Round(ChosenCurrentValueFont.Size) + "pt";
 
-            if (this.Theme.StackedColors == null || this.Theme.StackedColors.Length < 2)
+            if (this.Theme.StackedColors == null || this.Theme.StackedColors.Count < 2)
             {
-                this.Theme.StackedColors = new Color[] { Color.FromArgb(0, 122, 204), Color.FromArgb(16, 124, 65) };
+                this.Theme.StackedColors = new List<Color> { Color.FromArgb(0, 122, 204), Color.FromArgb(16, 124, 65) };
             }
             btnColor1.BackColor = this.Theme.StackedColors[0];
             btnColor2.BackColor = this.Theme.StackedColors[1];

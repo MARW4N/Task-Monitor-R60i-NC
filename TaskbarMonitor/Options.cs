@@ -242,16 +242,16 @@ namespace TaskbarMonitor
 
                 if (!opt.CounterOptions.ContainsKey("SOUNDCORE"))
                 {
-                    opt.CounterOptions.Add("SOUNDCORE", new CounterOptions
+                    opt.CounterOptions.Add("SOUNDCORE", new TaskbarMonitor.CounterOptions
                     {
-                        ShowTitle = CounterOptions.DisplayType.SHOW,
+                        ShowTitle = TaskbarMonitor.CounterOptions.DisplayType.SHOW,
                         Enabled = true,
-                        TitlePosition = CounterOptions.DisplayPosition.TOP,
+                        TitlePosition = TaskbarMonitor.CounterOptions.DisplayPosition.TOP,
                         ShowTitleShadowOnHover = true,
-                        ShowCurrentValue = CounterOptions.DisplayType.SHOW,
+                        ShowCurrentValue = TaskbarMonitor.CounterOptions.DisplayType.SHOW,
                         ShowCurrentValueShadowOnHover = true,
                         CurrentValueAsSummary = true,
-                        SummaryPosition = CounterOptions.DisplayPosition.BOTTOM,
+                        SummaryPosition = TaskbarMonitor.CounterOptions.DisplayPosition.BOTTOM,
                         InvertOrder = false,
                         SeparateScales = false,
                         GraphType = Counters.ICounter.CounterType.SINGLE,
