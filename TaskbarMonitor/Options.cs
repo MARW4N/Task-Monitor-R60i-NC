@@ -221,7 +221,44 @@ namespace TaskbarMonitor
             var origin = System.IO.Path.Combine(folder, "config.json");
             if (System.IO.File.Exists(origin))
             {
-                opt = JsonConvert.DeserializeObject<Options>(System.IO.File.ReadAllText(origin));
+                try
+                {
+                    opt = JsonConvert.DeserializeObject<Options>(System.IO.File.ReadAllText(origin));
+                }
+                catch
+                {
+                    opt = DefaultOptions();
+                }
+
+                if (opt == null)
+                {
+                    opt = DefaultOptions();
+                }
+
+                if (opt.CounterOptions == null)
+                {
+                    opt.CounterOptions = DefaultOptions().CounterOptions;
+                }
+
+                if (!opt.CounterOptions.ContainsKey("SOUNDCORE"))
+                {
+                    opt.CounterOptions.Add("SOUNDCORE", new CounterOptions
+                    {
+                        ShowTitle = CounterOptions.DisplayType.SHOW,
+                        Enabled = true,
+                        TitlePosition = CounterOptions.DisplayPosition.TOP,
+                        ShowTitleShadowOnHover = true,
+                        ShowCurrentValue = CounterOptions.DisplayType.SHOW,
+                        ShowCurrentValueShadowOnHover = true,
+                        CurrentValueAsSummary = true,
+                        SummaryPosition = CounterOptions.DisplayPosition.BOTTOM,
+                        InvertOrder = false,
+                        SeparateScales = false,
+                        GraphType = Counters.ICounter.CounterType.SINGLE,
+                        Order = 6
+                    });
+                }
+
                 if (opt.Soundcore == null)
                 {
                     opt.Soundcore = new SoundcoreOptions();

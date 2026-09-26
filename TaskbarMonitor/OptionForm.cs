@@ -34,9 +34,44 @@ namespace TaskbarMonitor
             {
                 this.Version = version;
 
+                if (theme == null)
+                {
+                    theme = GraphTheme.ReadFromDisk() ?? GraphTheme.DefaultDarkTheme();
+                }
                 this.Theme = new GraphTheme();
                 this.OriginalTheme = theme;
                 theme.CopyTo(this.Theme);
+
+                if (opt == null)
+                {
+                    opt = Options.ReadFromDisk() ?? Options.DefaultOptions();
+                }
+                if (opt.CounterOptions == null)
+                {
+                    opt.CounterOptions = Options.DefaultOptions().CounterOptions;
+                }
+                if (!opt.CounterOptions.ContainsKey("SOUNDCORE"))
+                {
+                    opt.CounterOptions.Add("SOUNDCORE", new CounterOptions
+                    {
+                        ShowTitle = CounterOptions.DisplayType.SHOW,
+                        Enabled = true,
+                        TitlePosition = CounterOptions.DisplayPosition.TOP,
+                        ShowTitleShadowOnHover = true,
+                        ShowCurrentValue = CounterOptions.DisplayType.SHOW,
+                        ShowCurrentValueShadowOnHover = true,
+                        CurrentValueAsSummary = true,
+                        SummaryPosition = CounterOptions.DisplayPosition.BOTTOM,
+                        InvertOrder = false,
+                        SeparateScales = false,
+                        GraphType = Counters.ICounter.CounterType.SINGLE,
+                        Order = 6
+                    });
+                }
+                if (opt.Soundcore == null)
+                {
+                    opt.Soundcore = new SoundcoreOptions();
+                }
 
                 this.Options = new Options();
                 this.OriginalOptions = opt;
@@ -138,7 +173,10 @@ namespace TaskbarMonitor
 
             lblVersion.Text = "v" + Version.ToString(3);
 
-            ActiveCounter = this.Options.CounterOptions.First().Value;
+            if (this.Options.CounterOptions != null && this.Options.CounterOptions.Count > 0)
+            {
+                ActiveCounter = this.Options.CounterOptions.First().Value;
+            }
             UpdateForm();
             UpdateReplicateSettingsMenu();
             UpdateThemeOptions();
@@ -148,12 +186,16 @@ namespace TaskbarMonitor
             btnColorTitle.BackColor = this.Theme.TitleColor;
             btnColorTitleShadow.BackColor = this.Theme.TitleShadowColor;
             
-            ChosenTitleFont = new Font(this.Theme.TitleFont, this.Theme.TitleSize, FontStyle.Bold);
+            ChosenTitleFont = new Font(this.Theme.TitleFont ?? "Calibri", this.Theme.TitleSize > 0 ? this.Theme.TitleSize : 7.25f, FontStyle.Bold);
             linkTitleFont.Text = ChosenTitleFont.Name + ", " + ChosenTitleFont.Size + "pt";
 
-            ChosenCurrentValueFont = new Font(this.Theme.CurrentValueFont, this.Theme.CurrentValueSize, FontStyle.Bold);
+            ChosenCurrentValueFont = new Font(this.Theme.CurrentValueFont ?? "Calibri", this.Theme.CurrentValueSize > 0 ? this.Theme.CurrentValueSize : 7.25f, FontStyle.Bold);
             linkCurrentValueFont.Text = ChosenCurrentValueFont.Name + ", " + Math.Round(ChosenCurrentValueFont.Size) + "pt";
 
+            if (this.Theme.StackedColors == null || this.Theme.StackedColors.Length < 2)
+            {
+                this.Theme.StackedColors = new Color[] { Color.FromArgb(0, 122, 204), Color.FromArgb(16, 124, 65) };
+            }
             btnColor1.BackColor = this.Theme.StackedColors[0];
             btnColor2.BackColor = this.Theme.StackedColors[1];
 
@@ -465,8 +507,15 @@ namespace TaskbarMonitor
 
         public void OpenTab(int i)
         {
-            tabControl1.SelectedIndex = i;
-            UpdateMenuColors(panelMenu.Controls.OfType<Button>().ToList().OrderBy(x => x.Top).ElementAt(i));
+            if (tabControl1 != null && tabControl1.TabCount > i && i >= 0)
+            {
+                tabControl1.SelectedIndex = i;
+                var buttons = panelMenu?.Controls.OfType<Button>().ToList().OrderBy(x => x.Top).ToList();
+                if (buttons != null && buttons.Count > i)
+                {
+                    UpdateMenuColors(buttons.ElementAt(i));
+                }
+            }
         }
  
         private void linkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

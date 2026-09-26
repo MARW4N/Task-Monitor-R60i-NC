@@ -64,9 +64,9 @@ namespace TaskbarMonitor
         Font fontTitle;
         int lastSize = 30;
         bool mouseOver = false;
-        public GraphTheme customTheme;
-        GraphTheme darkTheme;
-        GraphTheme lightTheme;
+        public GraphTheme customTheme = GraphTheme.ReadFromDisk() ?? GraphTheme.DefaultDarkTheme();
+        GraphTheme darkTheme = GraphTheme.DefaultDarkTheme();
+        GraphTheme lightTheme = GraphTheme.DefaultLightTheme();
 
         GraphTheme defaultTheme;
 
