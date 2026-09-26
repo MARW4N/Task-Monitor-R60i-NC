@@ -13,6 +13,21 @@ export interface CounterOption {
   invertOrder: boolean;
 }
 
+export interface CounterOptions {
+  Enabled: boolean;
+  Order: number;
+  GraphType: CounterType;
+  ShowTitle: 'SHOW' | 'HOVER' | 'HIDDEN';
+  TitlePosition: 'TOP' | 'MIDDLE' | 'BOTTOM';
+  ShowCurrentValue: 'SHOW' | 'HOVER' | 'HIDDEN';
+  SummaryPosition: 'TOP' | 'MIDDLE' | 'BOTTOM';
+  CurrentValueAsSummary: boolean;
+  SeparateScales: boolean;
+  InvertOrder: boolean;
+  ShowCurrentValueShadowOnHover?: boolean;
+  ShowTitleShadowOnHover?: boolean;
+}
+
 export interface SoundcoreConfig {
   exePath: string;
   macAddress: string;
@@ -47,4 +62,58 @@ export interface MonitorTheme {
   graphColor1: string;
   graphColor2: string;
   lowBatteryColor: string;
+}
+
+export interface GraphTheme {
+  ThemeVersion: number;
+  BarColor: string;
+  TextColor: string;
+  TextShadowColor: string;
+  TitleColor: string;
+  TitleShadowColor: string;
+  TitleFont: string;
+  TitleFontStyle: string;
+  TitleSize: number;
+  CurrentValueFont: string;
+  CurrentValueFontStyle: string;
+  CurrentValueSize: number;
+  StackedColors: string[];
+}
+
+export interface AppOptions {
+  OptionsVersion: number;
+  HistorySize: number;
+  PollTime: number;
+  ThemeType: ThemeMode;
+  EnableOnAllMonitors: boolean;
+  MonitorOptions: Record<string, { Enabled: boolean; Position: 'LEFT' | 'RIGHT' }>;
+  CounterOptions: Record<string, CounterOptions>;
+  Soundcore?: SoundcoreConfig;
+}
+
+export interface CounterSubItem {
+  name: string;
+  currentValue: number;
+  currentStringValue: string;
+  maximumValue: number;
+  history: number[];
+}
+
+export interface CounterData {
+  id: string;
+  name: string;
+  label: string;
+  summary: CounterSubItem;
+  subItems: CounterSubItem[];
+}
+
+export interface SystemProcess {
+  id: number;
+  name: string;
+  icon: string;
+  cpu: number;
+  memoryMB: number;
+  diskMBs: number;
+  networkKbps: number;
+  status: string;
 }
