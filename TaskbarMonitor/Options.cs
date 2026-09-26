@@ -73,7 +73,10 @@ namespace TaskbarMonitor
                     ShowLeft = this.Soundcore.ShowLeft,
                     ShowRight = this.Soundcore.ShowRight,
                     ShowCase = this.Soundcore.ShowCase,
-                    RenderAsWidgetText = this.Soundcore.RenderAsWidgetText
+                    RenderAsWidgetText = this.Soundcore.RenderAsWidgetText,
+                    PositionOnFarLeft = this.Soundcore.PositionOnFarLeft,
+                    FontFamily = this.Soundcore.FontFamily,
+                    FontSize = this.Soundcore.FontSize
                 };
             }
             else
@@ -430,5 +433,9 @@ namespace TaskbarMonitor
         public bool ShowRight { get; set; } = true;
         public bool ShowCase { get; set; } = true;
         public bool RenderAsWidgetText { get; set; } = true;
+
+        public bool PositionOnFarLeft { get; set; } = true;
+        public string FontFamily { get; set; } = "Segoe UI";
+        public float FontSize { get; set; } = 9.0f;
     }
 }

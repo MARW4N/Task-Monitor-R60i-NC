@@ -229,6 +229,12 @@ namespace TaskbarMonitor
                 this.chkSoundcoreShowCase.Checked = this.Options.Soundcore.ShowCase;
             if (this.chkSoundcoreHideDisconnected != null)
                 this.chkSoundcoreHideDisconnected.Checked = this.Options.Soundcore.HideWhenDisconnected;
+            if (this.chkSoundcorePositionLeft != null)
+                this.chkSoundcorePositionLeft.Checked = this.Options.Soundcore.PositionOnFarLeft;
+            if (this.linkSoundcoreFont != null)
+                this.linkSoundcoreFont.Text = $"{this.Options.Soundcore.FontFamily}, {Math.Round(this.Options.Soundcore.FontSize)}pt";
+            if (this.editSoundcoreFontSize != null)
+                this.editSoundcoreFontSize.Value = Math.Max(6, Math.Min(24, (decimal)this.Options.Soundcore.FontSize));
         }
 
         private void SaveSoundcoreOptions()
@@ -252,6 +258,10 @@ namespace TaskbarMonitor
                 this.Options.Soundcore.ShowCase = this.chkSoundcoreShowCase.Checked;
             if (this.chkSoundcoreHideDisconnected != null)
                 this.Options.Soundcore.HideWhenDisconnected = this.chkSoundcoreHideDisconnected.Checked;
+            if (this.chkSoundcorePositionLeft != null)
+                this.Options.Soundcore.PositionOnFarLeft = this.chkSoundcorePositionLeft.Checked;
+            if (this.editSoundcoreFontSize != null)
+                this.Options.Soundcore.FontSize = (float)this.editSoundcoreFontSize.Value;
         }
          
 
@@ -973,6 +983,55 @@ namespace TaskbarMonitor
             }
         }
 
-        
+        private void chkSoundcorePositionLeft_CheckedChanged(object sender, EventArgs e)
+        {
+            if (initializing) return;
+            if (this.Options.Soundcore != null)
+            {
+                this.Options.Soundcore.PositionOnFarLeft = chkSoundcorePositionLeft.Checked;
+                UpdatePreview();
+            }
+        }
+
+        private void linkSoundcoreFont_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (initializing) return;
+            try
+            {
+                using (FontDialog fd = new FontDialog())
+                {
+                    fd.ShowColor = false;
+                    fd.ShowEffects = false;
+                    fd.MaxSize = 24;
+                    fd.MinSize = 6;
+                    string fam = string.IsNullOrEmpty(this.Options.Soundcore.FontFamily) ? "Segoe UI" : this.Options.Soundcore.FontFamily;
+                    float sz = this.Options.Soundcore.FontSize > 0 ? this.Options.Soundcore.FontSize : 9.0f;
+                    fd.Font = new Font(fam, sz, FontStyle.Bold);
+                    if (fd.ShowDialog() == DialogResult.OK)
+                    {
+                        this.Options.Soundcore.FontFamily = fd.Font.FontFamily.Name;
+                        this.Options.Soundcore.FontSize = fd.Font.Size;
+                        if (linkSoundcoreFont != null)
+                            linkSoundcoreFont.Text = $"{fd.Font.FontFamily.Name}, {Math.Round(fd.Font.Size)}pt";
+                        if (editSoundcoreFontSize != null)
+                            editSoundcoreFontSize.Value = Math.Max(6, Math.Min(24, (decimal)fd.Font.Size));
+                        UpdatePreview();
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void editSoundcoreFontSize_ValueChanged(object sender, EventArgs e)
+        {
+            if (initializing) return;
+            if (this.Options.Soundcore != null)
+            {
+                this.Options.Soundcore.FontSize = (float)editSoundcoreFontSize.Value;
+                if (linkSoundcoreFont != null)
+                    linkSoundcoreFont.Text = $"{this.Options.Soundcore.FontFamily}, {Math.Round(this.Options.Soundcore.FontSize)}pt";
+                UpdatePreview();
+            }
+        }
     }
 }

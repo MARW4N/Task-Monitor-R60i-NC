@@ -126,6 +126,12 @@ namespace TaskbarMonitor
             this.labelSoundcoreThresholdHint = new System.Windows.Forms.Label();
             this.groupBoxSoundcoreBehavior = new System.Windows.Forms.GroupBox();
             this.chkSoundcoreHideDisconnected = new System.Windows.Forms.CheckBox();
+            this.groupBoxSoundcoreStyle = new System.Windows.Forms.GroupBox();
+            this.chkSoundcorePositionLeft = new System.Windows.Forms.CheckBox();
+            this.labelSoundcoreFont = new System.Windows.Forms.Label();
+            this.linkSoundcoreFont = new System.Windows.Forms.LinkLabel();
+            this.labelSoundcoreFontSize = new System.Windows.Forms.Label();
+            this.editSoundcoreFontSize = new System.Windows.Forms.NumericUpDown();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.chkMonitorEnabled = new System.Windows.Forms.CheckBox();
@@ -172,6 +178,8 @@ namespace TaskbarMonitor
             this.panelCustomTheme.SuspendLayout();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.editPollTime)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.editSoundcoreFontSize)).BeginInit();
+            this.groupBoxSoundcoreStyle.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.groupBox6.SuspendLayout();
@@ -1062,6 +1070,7 @@ namespace TaskbarMonitor
             this.tabPageSoundcore.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("tabPage1.BackgroundImage")));
             this.tabPageSoundcore.Controls.Add(this.groupBoxSoundcoreDevice);
             this.tabPageSoundcore.Controls.Add(this.groupBoxSoundcoreDisplay);
+            this.tabPageSoundcore.Controls.Add(this.groupBoxSoundcoreStyle);
             this.tabPageSoundcore.Controls.Add(this.groupBoxSoundcoreBehavior);
             this.tabPageSoundcore.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tabPageSoundcore.Location = new System.Drawing.Point(4, 5);
@@ -1253,20 +1262,89 @@ namespace TaskbarMonitor
             this.labelSoundcoreThresholdHint.TabIndex = 5;
             this.labelSoundcoreThresholdHint.Text = "Note: Battery levels at or below threshold will be highlighted in Red (#F23C34).";
             // 
+            // groupBoxSoundcoreStyle
+            // 
+            this.groupBoxSoundcoreStyle.Controls.Add(this.editSoundcoreFontSize);
+            this.groupBoxSoundcoreStyle.Controls.Add(this.labelSoundcoreFontSize);
+            this.groupBoxSoundcoreStyle.Controls.Add(this.linkSoundcoreFont);
+            this.groupBoxSoundcoreStyle.Controls.Add(this.labelSoundcoreFont);
+            this.groupBoxSoundcoreStyle.Controls.Add(this.chkSoundcorePositionLeft);
+            this.groupBoxSoundcoreStyle.Location = new System.Drawing.Point(6, 335);
+            this.groupBoxSoundcoreStyle.Name = "groupBoxSoundcoreStyle";
+            this.groupBoxSoundcoreStyle.Size = new System.Drawing.Size(576, 92);
+            this.groupBoxSoundcoreStyle.TabIndex = 2;
+            this.groupBoxSoundcoreStyle.TabStop = false;
+            this.groupBoxSoundcoreStyle.Text = "Font & Taskbar Positioning";
+            // 
+            // chkSoundcorePositionLeft
+            // 
+            this.chkSoundcorePositionLeft.AutoSize = true;
+            this.chkSoundcorePositionLeft.Checked = true;
+            this.chkSoundcorePositionLeft.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkSoundcorePositionLeft.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.chkSoundcorePositionLeft.Location = new System.Drawing.Point(15, 25);
+            this.chkSoundcorePositionLeft.Name = "chkSoundcorePositionLeft";
+            this.chkSoundcorePositionLeft.Size = new System.Drawing.Size(425, 18);
+            this.chkSoundcorePositionLeft.TabIndex = 0;
+            this.chkSoundcorePositionLeft.Text = "Position on Far Left (before all CPU / Memory / Disk / Network monitors)";
+            this.chkSoundcorePositionLeft.UseVisualStyleBackColor = true;
+            this.chkSoundcorePositionLeft.CheckedChanged += new System.EventHandler(this.chkSoundcorePositionLeft_CheckedChanged);
+            // 
+            // labelSoundcoreFont
+            // 
+            this.labelSoundcoreFont.AutoSize = true;
+            this.labelSoundcoreFont.Location = new System.Drawing.Point(12, 58);
+            this.labelSoundcoreFont.Name = "labelSoundcoreFont";
+            this.labelSoundcoreFont.Size = new System.Drawing.Size(107, 14);
+            this.labelSoundcoreFont.TabIndex = 1;
+            this.labelSoundcoreFont.Text = "Battery Font Style:";
+            // 
+            // linkSoundcoreFont
+            // 
+            this.linkSoundcoreFont.AutoSize = true;
+            this.linkSoundcoreFont.Font = new System.Drawing.Font("Calibri", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.linkSoundcoreFont.Location = new System.Drawing.Point(125, 58);
+            this.linkSoundcoreFont.Name = "linkSoundcoreFont";
+            this.linkSoundcoreFont.Size = new System.Drawing.Size(76, 14);
+            this.linkSoundcoreFont.TabIndex = 2;
+            this.linkSoundcoreFont.TabStop = true;
+            this.linkSoundcoreFont.Text = "Segoe UI, 9pt";
+            this.linkSoundcoreFont.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkSoundcoreFont_LinkClicked);
+            // 
+            // labelSoundcoreFontSize
+            // 
+            this.labelSoundcoreFontSize.AutoSize = true;
+            this.labelSoundcoreFontSize.Location = new System.Drawing.Point(260, 58);
+            this.labelSoundcoreFontSize.Name = "labelSoundcoreFontSize";
+            this.labelSoundcoreFontSize.Size = new System.Drawing.Size(56, 14);
+            this.labelSoundcoreFontSize.TabIndex = 3;
+            this.labelSoundcoreFontSize.Text = "Size (pt):";
+            // 
+            // editSoundcoreFontSize
+            // 
+            this.editSoundcoreFontSize.Location = new System.Drawing.Point(322, 55);
+            this.editSoundcoreFontSize.Maximum = new decimal(new int[] { 24, 0, 0, 0 });
+            this.editSoundcoreFontSize.Minimum = new decimal(new int[] { 6, 0, 0, 0 });
+            this.editSoundcoreFontSize.Name = "editSoundcoreFontSize";
+            this.editSoundcoreFontSize.Size = new System.Drawing.Size(60, 22);
+            this.editSoundcoreFontSize.TabIndex = 4;
+            this.editSoundcoreFontSize.Value = new decimal(new int[] { 9, 0, 0, 0 });
+            this.editSoundcoreFontSize.ValueChanged += new System.EventHandler(this.editSoundcoreFontSize_ValueChanged);
+            // 
             // groupBoxSoundcoreBehavior
             // 
             this.groupBoxSoundcoreBehavior.Controls.Add(this.chkSoundcoreHideDisconnected);
-            this.groupBoxSoundcoreBehavior.Location = new System.Drawing.Point(6, 335);
+            this.groupBoxSoundcoreBehavior.Location = new System.Drawing.Point(6, 435);
             this.groupBoxSoundcoreBehavior.Name = "groupBoxSoundcoreBehavior";
-            this.groupBoxSoundcoreBehavior.Size = new System.Drawing.Size(576, 75);
-            this.groupBoxSoundcoreBehavior.TabIndex = 2;
+            this.groupBoxSoundcoreBehavior.Size = new System.Drawing.Size(576, 68);
+            this.groupBoxSoundcoreBehavior.TabIndex = 3;
             this.groupBoxSoundcoreBehavior.TabStop = false;
             this.groupBoxSoundcoreBehavior.Text = "Taskbar Behavior";
             // 
             // chkSoundcoreHideDisconnected
             // 
             this.chkSoundcoreHideDisconnected.AutoSize = true;
-            this.chkSoundcoreHideDisconnected.Location = new System.Drawing.Point(15, 30);
+            this.chkSoundcoreHideDisconnected.Location = new System.Drawing.Point(15, 28);
             this.chkSoundcoreHideDisconnected.Name = "chkSoundcoreHideDisconnected";
             this.chkSoundcoreHideDisconnected.Size = new System.Drawing.Size(380, 18);
             this.chkSoundcoreHideDisconnected.TabIndex = 0;
@@ -1811,5 +1889,11 @@ namespace TaskbarMonitor
         private System.Windows.Forms.GroupBox groupBoxSoundcoreBehavior;
         private System.Windows.Forms.CheckBox chkSoundcoreHideDisconnected;
         private System.Windows.Forms.Button btnTestSoundcore;
+        private System.Windows.Forms.GroupBox groupBoxSoundcoreStyle;
+        private System.Windows.Forms.CheckBox chkSoundcorePositionLeft;
+        private System.Windows.Forms.Label labelSoundcoreFont;
+        private System.Windows.Forms.LinkLabel linkSoundcoreFont;
+        private System.Windows.Forms.Label labelSoundcoreFontSize;
+        private System.Windows.Forms.NumericUpDown editSoundcoreFontSize;
     }
 }
