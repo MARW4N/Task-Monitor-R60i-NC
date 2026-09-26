@@ -122,11 +122,24 @@ Write-Host "  -> Restoring packages..." -ForegroundColor Gray
 & $nugetPath restore $slnPath -PackagesDirectory $packagesDir | Out-Null
 
 Write-Host "  -> Ensuring Roslyn C# compiler is ready..." -ForegroundColor Gray
-if (!(Test-Path (Join-Path $packagesDir "Microsoft.Net.Compilers.Toolset.4.5.0"))) {
-    & $nugetPath install Microsoft.Net.Compilers.Toolset -Version 4.5.0 -OutputDirectory $packagesDir | Out-Null
+if (!(Test-Path (Join-Path $packagesDir "Microsoft.Net.Compilers.2.10.0"))) {
+    & $nugetPath install Microsoft.Net.Compilers -Version 2.10.0 -OutputDirectory $packagesDir | Out-Null
 }
 if (!(Test-Path (Join-Path $packagesDir "Microsoft.NETFramework.ReferenceAssemblies.net472.1.0.3"))) {
     & $nugetPath install Microsoft.NETFramework.ReferenceAssemblies.net472 -Version 1.0.3 -OutputDirectory $packagesDir | Out-Null
+}
+
+# Ensure all props/targets files have xmlns="http://schemas.microsoft.com/developer/msbuild/2003" required by v4.0.30319\MSBuild.exe
+Get-ChildItem -Path $packagesDir -Recurse -Include *.props,*.targets | ForEach-Object {
+    try {
+        $content = [System.IO.File]::ReadAllText($_.FullName)
+        if ($content -match '<Project\s*>' -or $content.StartsWith('<Project>')) {
+            $content = $content -replace '<Project>', '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">'
+            [System.IO.File]::WriteAllText($_.FullName, $content)
+        }
+    } catch {
+        # ignore file lock
+    }
 }
 
 # 3. Compile Solution
