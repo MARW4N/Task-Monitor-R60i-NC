@@ -8,6 +8,54 @@ Write-Host ""
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# 0. Locate Project Directory
+$slnPath = Join-Path $ScriptDir "TaskbarMonitor.sln"
+if (!(Test-Path $slnPath)) {
+    # Check if project folder is inside a subfolder on Desktop or Downloads
+    $searchLocations = @(
+        (Join-Path $ScriptDir "*taskbar*"),
+        (Join-Path $env:USERPROFILE "Desktop\*taskbar*"),
+        (Join-Path $env:USERPROFILE "Downloads\*taskbar*")
+    )
+    foreach ($loc in $searchLocations) {
+        $candidate = Get-ChildItem -Path $loc -Directory -ErrorAction SilentlyContinue | Where-Object { 
+            Test-Path (Join-Path $_.FullName "TaskbarMonitor.sln") 
+        } | Select-Object -First 1
+        if ($candidate) {
+            $ScriptDir = $candidate.FullName
+            $slnPath = Join-Path $ScriptDir "TaskbarMonitor.sln"
+            Write-Host "-> Found Taskbar Monitor folder at: $ScriptDir" -ForegroundColor Green
+            break
+        }
+    }
+}
+
+# If still not found, prompt the user
+if (!(Test-Path $slnPath)) {
+    Write-Host ""
+    Write-Host "[!] TaskbarMonitor.sln was not found directly in: $ScriptDir" -ForegroundColor Yellow
+    Write-Host "    This happens when build.ps1 is run separately from the project files." -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Please enter the path to the folder where you extracted the project:" -ForegroundColor White
+    $entered = Read-Host "Folder Path (or drag and drop the folder here)"
+    if ($entered) {
+        $cleanPath = $entered.Trim("'`"")
+        if (Test-Path (Join-Path $cleanPath "TaskbarMonitor.sln")) {
+            $ScriptDir = $cleanPath
+            $slnPath = Join-Path $ScriptDir "TaskbarMonitor.sln"
+        }
+    }
+}
+
+if (!(Test-Path $slnPath)) {
+    Write-Host ""
+    Write-Host "[ERROR] Could not find TaskbarMonitor.sln." -ForegroundColor Red
+    Write-Host "Make sure you extract the entire zip folder and run build.ps1 INSIDE that folder." -ForegroundColor Yellow
+    Write-Host ""
+    Read-Host "Press Enter to exit..."
+    exit 1
+}
+
 # 1. Search for MSBuild
 Write-Host "[1/4] Searching for C# / MSBuild Compiler..." -ForegroundColor Yellow
 
@@ -70,7 +118,6 @@ if (!(Test-Path $nugetPath)) {
 }
 
 Write-Host "  -> Restoring packages..." -ForegroundColor Gray
-$slnPath = Join-Path $ScriptDir "TaskbarMonitor.sln"
 & $nugetPath restore $slnPath | Out-Null
 
 # 3. Compile Solution
