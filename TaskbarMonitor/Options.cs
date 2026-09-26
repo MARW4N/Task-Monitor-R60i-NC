@@ -29,29 +29,34 @@ namespace TaskbarMonitor
 
         public void CopyTo(Options opt)
         {
+            if (opt == null) return;
+
             opt.HistorySize = this.HistorySize;
             opt.PollTime = this.PollTime;
             opt.ThemeType = this.ThemeType;
-            if(opt.CounterOptions == null)
+            if (opt.CounterOptions == null)
                 opt.CounterOptions = new Dictionary<string, CounterOptions>();
             
-            foreach (var item in this.CounterOptions)
+            if (this.CounterOptions != null)
             {
-                if (!opt.CounterOptions.ContainsKey(item.Key))
-                    opt.CounterOptions.Add(item.Key, new TaskbarMonitor.CounterOptions());
+                foreach (var item in this.CounterOptions)
+                {
+                    if (!opt.CounterOptions.ContainsKey(item.Key))
+                        opt.CounterOptions.Add(item.Key, new TaskbarMonitor.CounterOptions());
 
-                opt.CounterOptions[item.Key].ShowTitle = item.Value.ShowTitle;
-                opt.CounterOptions[item.Key].Enabled = item.Value.Enabled;
-                opt.CounterOptions[item.Key].TitlePosition = item.Value.TitlePosition;
-                opt.CounterOptions[item.Key].ShowTitleShadowOnHover = item.Value.ShowTitleShadowOnHover;
-                opt.CounterOptions[item.Key].ShowCurrentValue = item.Value.ShowCurrentValue;
-                opt.CounterOptions[item.Key].ShowCurrentValueShadowOnHover = item.Value.ShowCurrentValueShadowOnHover;
-                opt.CounterOptions[item.Key].CurrentValueAsSummary = item.Value.CurrentValueAsSummary;
-                opt.CounterOptions[item.Key].SummaryPosition = item.Value.SummaryPosition;
-                opt.CounterOptions[item.Key].InvertOrder = item.Value.InvertOrder;
-                opt.CounterOptions[item.Key].SeparateScales = item.Value.SeparateScales;
-                opt.CounterOptions[item.Key].GraphType = item.Value.GraphType;
-                opt.CounterOptions[item.Key].Order = item.Value.Order;
+                    opt.CounterOptions[item.Key].ShowTitle = item.Value.ShowTitle;
+                    opt.CounterOptions[item.Key].Enabled = item.Value.Enabled;
+                    opt.CounterOptions[item.Key].TitlePosition = item.Value.TitlePosition;
+                    opt.CounterOptions[item.Key].ShowTitleShadowOnHover = item.Value.ShowTitleShadowOnHover;
+                    opt.CounterOptions[item.Key].ShowCurrentValue = item.Value.ShowCurrentValue;
+                    opt.CounterOptions[item.Key].ShowCurrentValueShadowOnHover = item.Value.ShowCurrentValueShadowOnHover;
+                    opt.CounterOptions[item.Key].CurrentValueAsSummary = item.Value.CurrentValueAsSummary;
+                    opt.CounterOptions[item.Key].SummaryPosition = item.Value.SummaryPosition;
+                    opt.CounterOptions[item.Key].InvertOrder = item.Value.InvertOrder;
+                    opt.CounterOptions[item.Key].SeparateScales = item.Value.SeparateScales;
+                    opt.CounterOptions[item.Key].GraphType = item.Value.GraphType;
+                    opt.CounterOptions[item.Key].Order = item.Value.Order;
+                }
             }
 
             opt.EnableOnAllMonitors = this.EnableOnAllMonitors;
@@ -71,9 +76,16 @@ namespace TaskbarMonitor
                     RenderAsWidgetText = this.Soundcore.RenderAsWidgetText
                 };
             }
+            else
+            {
+                opt.Soundcore = new SoundcoreOptions();
+            }
 
             if (opt.MonitorOptions == null)
                 opt.MonitorOptions = new Dictionary<string, MonitorOptions>();
+            if (this.MonitorOptions == null)
+                this.MonitorOptions = new Dictionary<string, MonitorOptions>();
+
             foreach (var item in this.MonitorOptions)
             {
                 if (!opt.MonitorOptions.ContainsKey(item.Key))
@@ -82,7 +94,7 @@ namespace TaskbarMonitor
                 opt.MonitorOptions[item.Key].Enabled = item.Value.Enabled;
                 opt.MonitorOptions[item.Key].Position = item.Value.Position;
             }
-            for(int i = 0; i < opt.MonitorOptions.Count; i++)
+            for (int i = 0; i < opt.MonitorOptions.Count; i++)
             {
                 if (!this.MonitorOptions.ContainsKey(opt.MonitorOptions.Keys.ToList()[i]))
                 {
@@ -90,7 +102,6 @@ namespace TaskbarMonitor
                     i--;
                 }
             }
-
         }
         public static Options DefaultOptions()
         {
@@ -262,6 +273,11 @@ namespace TaskbarMonitor
                 if (opt.Soundcore == null)
                 {
                     opt.Soundcore = new SoundcoreOptions();
+                }
+
+                if (opt.MonitorOptions == null)
+                {
+                    opt.MonitorOptions = new Dictionary<string, MonitorOptions>();
                 }
             }
             else

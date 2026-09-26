@@ -144,7 +144,7 @@ namespace TaskbarMonitor
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading Options: {ex.Message}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error loading Options: {ex.Message}\n\nLocation:\n{ex.StackTrace}", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         private void Initialize()
@@ -413,19 +413,38 @@ namespace TaskbarMonitor
         private void UpdateForm()
         {
             initializing = true;
-            this.listGraphType.DataSource = this.AvailableGraphTypes[listCounters.Text];
+            if (string.IsNullOrEmpty(listCounters.Text) || !this.AvailableGraphTypes.ContainsKey(listCounters.Text))
+            {
+                if (listCounters.Items.Count > 0)
+                    listCounters.SelectedIndex = 0;
+            }
+
+            if (!string.IsNullOrEmpty(listCounters.Text) && this.AvailableGraphTypes.ContainsKey(listCounters.Text))
+            {
+                this.listGraphType.DataSource = this.AvailableGraphTypes[listCounters.Text];
+            }
             initializing = false;
-            this.listGraphType.Text = ActiveCounter.GraphType.ToString();
-            checkEnabled.Checked = ActiveCounter.Enabled;
-            listShowTitle.Text = ActiveCounter.ShowTitle.ToString();            
-            listShowCurrentValue.Text = ActiveCounter.ShowCurrentValue.ToString();
-            checkShowSummary.Checked = ActiveCounter.CurrentValueAsSummary;            
-            listSummaryPosition.Text = ActiveCounter.SummaryPosition.ToString();
-            checkInvertOrder.Checked = ActiveCounter.InvertOrder;
-            checkSeparateScales.Checked = ActiveCounter.SeparateScales;
-            checkTitleShadowHover.Checked = ActiveCounter.ShowTitleShadowOnHover;
-            checkValueShadowHover.Checked = ActiveCounter.ShowCurrentValueShadowOnHover;
-            listTitlePosition.Text = ActiveCounter.TitlePosition.ToString();
+
+            if (ActiveCounter == null && this.Options.CounterOptions != null && this.Options.CounterOptions.Count > 0)
+            {
+                ActiveCounter = this.Options.CounterOptions.First().Value;
+            }
+
+            if (ActiveCounter != null)
+            {
+                this.listGraphType.Text = ActiveCounter.GraphType.ToString();
+                checkEnabled.Checked = ActiveCounter.Enabled;
+                listShowTitle.Text = ActiveCounter.ShowTitle.ToString();            
+                listShowCurrentValue.Text = ActiveCounter.ShowCurrentValue.ToString();
+                checkShowSummary.Checked = ActiveCounter.CurrentValueAsSummary;            
+                listSummaryPosition.Text = ActiveCounter.SummaryPosition.ToString();
+                checkInvertOrder.Checked = ActiveCounter.InvertOrder;
+                checkSeparateScales.Checked = ActiveCounter.SeparateScales;
+                checkTitleShadowHover.Checked = ActiveCounter.ShowTitleShadowOnHover;
+                checkValueShadowHover.Checked = ActiveCounter.ShowCurrentValueShadowOnHover;
+                listTitlePosition.Text = ActiveCounter.TitlePosition.ToString();
+            }
+
             buttonUp.Enabled = listCounters.SelectedIndex > 0;
             buttonDown.Enabled = listCounters.SelectedIndex < listCounters.Items.Count - 1;
             UpdateFormScales();
@@ -794,7 +813,18 @@ namespace TaskbarMonitor
 
         private void UpdateMonitorForm()
         {
-            Screen selectedScreen = screenPositioning1.SelectedScreen;
+            if (this.Options.MonitorOptions == null)
+                this.Options.MonitorOptions = new Dictionary<string, MonitorOptions>();
+
+            Screen selectedScreen = screenPositioning1 != null ? screenPositioning1.SelectedScreen : null;
+            if (selectedScreen == null)
+            {
+                chkMonitorEnabled.Checked = true;
+                if (listMonitorPosition.Items.Count > 0)
+                    listMonitorPosition.SelectedIndex = 0;
+                return;
+            }
+
             var opt = Options.MonitorOptions.ContainsKey(selectedScreen.DeviceName) ? Options.MonitorOptions[selectedScreen.DeviceName] : null;
             if (opt == null)
             {
