@@ -226,7 +226,7 @@ namespace TaskbarMonitor.BLL
         /// </summary>
         /// <param name="parent">The handle of the desktop window.</param>
         /// <returns>List of window handles.</returns>
-        public static List<IntPtr> getChildWindows(IntPtr parent)
+        private static List<IntPtr> getChildWindows(IntPtr parent)
         {
             List<IntPtr> result = new List<IntPtr>();
             GCHandle listHandle = GCHandle.Alloc(result);
@@ -241,42 +241,6 @@ namespace TaskbarMonitor.BLL
                     listHandle.Free();
             }
             return result;
-        }
-
-        public static IntPtr FindRightmostChild(IntPtr parent)
-        {
-            var children = getChildWindows(parent);
-            if (children == null || children.Count == 0) return IntPtr.Zero;
-
-            var parentRect = Win32Api.GetWindowSize(parent);
-            IntPtr best = IntPtr.Zero;
-            int maxLeft = int.MinValue;
-
-            foreach (var h in children)
-            {
-                var r = Win32Api.GetWindowSize(h);
-                if (r.Width > 20 && r.Height > 10 && r.Left > maxLeft)
-                {
-                    if (parentRect.Width > 0 && (r.Left - parentRect.Left) > parentRect.Width / 2)
-                    {
-                        maxLeft = r.Left;
-                        best = h;
-                    }
-                }
-            }
-            return best;
-        }
-
-        public static IntPtr FindTrayNotifyWnd(IntPtr taskbarHandle)
-        {
-            var children = getChildWindows(taskbarHandle);
-            foreach (var h in children)
-            {
-                var info = winInfoGet(h);
-                if (info.Class == "TrayNotifyWnd")
-                    return h;
-            }
-            return IntPtr.Zero;
         }
 
         /// <summary>

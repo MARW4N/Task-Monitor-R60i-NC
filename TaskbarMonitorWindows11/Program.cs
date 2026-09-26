@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -98,10 +98,16 @@ namespace TaskbarMonitorWindows11
 
         private static void OpenReportForm(Exception ex)
         {
-            using (var r = new ReportErrorForm(ex))
+            try
             {
-                r.Show();
-                r.Run();
+                using (var r = new ReportErrorForm(ex))
+                {
+                    r.ShowDialog();
+                }
+            }
+            catch
+            {
+                MessageBox.Show($"Error running Taskbar Monitor:\n\n{ex.Message}\n\n{ex.StackTrace}", "Taskbar Monitor", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

@@ -61,15 +61,20 @@ namespace TaskbarMonitor
             this.Monitor.OnOptionsUpdated += Monitor_OnOptionsUpdated;                
         }
 
+        private bool isUpdatingPosition = false;
+
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (TaskbarList.Count > 0)
+            if (TaskbarList.Count > 0 && TaskbarList[0].TaskbarMonitorControl != null && !TaskbarList[0].TaskbarMonitorControl.IsDisposed)
             {                
-                TaskbarList[0].TaskbarMonitorControl?.Invoke(new Action(() => 
-                { 
-                    AddControlsToTaskbars(); 
-                    UpdateAllPositions();
-                }));
+                try
+                {
+                    TaskbarList[0].TaskbarMonitorControl.BeginInvoke(new Action(() => 
+                    { 
+                        AddControlsToTaskbars(); 
+                    }));
+                }
+                catch { }
             }
         }
 
@@ -92,101 +97,104 @@ namespace TaskbarMonitor
 
         private void UpdatePosition(Taskbar taskbar, bool force = false)
         {
-            if (taskbar == null || taskbar.TargetWnd == IntPtr.Zero || taskbar.TaskbarMonitorControl == null)
+            if (isUpdatingPosition) return;
+            if (taskbar == null || taskbar.TargetWnd == IntPtr.Zero || taskbar.TaskbarMonitorControl == null || taskbar.TaskbarMonitorControl.IsDisposed)
                 return;
 
-            var handle = taskbar.TargetWnd;
-            Rectangle rect = BLL.Win32Api.GetWindowSize(handle);
-            if (rect.Width <= 0 || rect.Height <= 0)
-                return;
-
-            Rectangle offset = Rectangle.Empty;
-
-            if (taskbar.IsMainTaskbar)
+            try
             {
-                if (taskbar.TrayWnd != IntPtr.Zero)
+                isUpdatingPosition = true;
+
+                var handle = taskbar.TargetWnd;
+                Rectangle rect = BLL.Win32Api.GetWindowSize(handle);
+                if (rect.Width <= 0 || rect.Height <= 0)
+                    return;
+
+                Rectangle offset = Rectangle.Empty;
+
+                if (taskbar.IsMainTaskbar)
                 {
-                    offset = BLL.Win32Api.GetWindowSize(taskbar.TrayWnd);
-                }
-                if (offset.Width <= 0 || offset.Left <= 0)
-                {
-                    taskbar.TrayWnd = BLL.WindowList.FindTrayNotifyWnd(taskbar.TargetWnd);
                     if (taskbar.TrayWnd != IntPtr.Zero)
+                    {
                         offset = BLL.Win32Api.GetWindowSize(taskbar.TrayWnd);
+                    }
                 }
-            }
-            else
-            {
-                if (taskbar.ClockWnd != IntPtr.Zero)
+                else
                 {
-                    offset = BLL.Win32Api.GetWindowSize(taskbar.ClockWnd);
+                    if (taskbar.ClockWnd != IntPtr.Zero)
+                    {
+                        offset = BLL.Win32Api.GetWindowSize(taskbar.ClockWnd);
+                    }
                 }
+
+                // If offset is empty or zero width, compute fallback based on taskbar dimensions and DPI
                 if (offset.Width <= 0 || offset.Left <= 0)
                 {
-                    taskbar.ClockWnd = BLL.WindowList.FindRightmostChild(taskbar.TargetWnd);
-                    if (taskbar.ClockWnd != IntPtr.Zero)
-                        offset = BLL.Win32Api.GetWindowSize(taskbar.ClockWnd);
+                    float dpiScale = rect.Height > 0 ? (float)rect.Height / 48.0f : 1.0f;
+                    int fallbackWidth = taskbar.IsMainTaskbar ? (int)(180.0f * dpiScale) : (int)(95.0f * dpiScale);
+                    offset = new Rectangle(rect.Right - fallbackWidth, rect.Top, fallbackWidth, rect.Height);
                 }
-            }
-              
-            if (force || taskbar.PreviousRect.Width == 0 || (offset.Width != taskbar.PreviousRect.Width && taskbar.TaskbarMonitorControl.IsHandleCreated))
-            {
-                Debug.WriteLine("UpdatePosition");
-                taskbar.TaskbarMonitorControl?.Invoke((MethodInvoker)delegate
+
+                Action applyPos = () =>
                 {
-                    var mopt = GetOptionsForTaskbar(taskbar);                    
-                    taskbar.TaskbarMonitorControl.Visible = this.Monitor.Options.EnableOnAllMonitors || mopt == null || mopt.Enabled;
-
-                    int targetLeft = 0;
-                    bool isRight = (mopt == null || mopt.Position == MonitorOptions.DisplayPosition.RIGHT);
-
-                    if (isRight)
+                    try
                     {
-                        const int marginFromTray = 6;
+                        if (taskbar.TaskbarMonitorControl == null || taskbar.TaskbarMonitorControl.IsDisposed)
+                            return;
 
-                        // offset.Left is the screen coordinate where tray/clock begins.
-                        // rect.Left is the screen coordinate where this taskbar begins.
-                        // offset.Left - rect.Left gives the exact relative starting X inside the taskbar.
-                        if (offset.Width > 0 && offset.Left > rect.Left && offset.Left < rect.Right)
+                        var mopt = GetOptionsForTaskbar(taskbar);                    
+                        taskbar.TaskbarMonitorControl.Visible = this.Monitor.Options.EnableOnAllMonitors || mopt == null || mopt.Enabled;
+
+                        int targetLeft = 0;
+                        bool isRight = (mopt == null || mopt.Position == MonitorOptions.DisplayPosition.RIGHT);
+
+                        if (isRight)
                         {
+                            const int marginFromTray = 6;
                             int trayRelativeLeft = offset.Left - rect.Left;
+                            if (trayRelativeLeft <= 0 || trayRelativeLeft > rect.Width)
+                            {
+                                trayRelativeLeft = rect.Width - offset.Width;
+                            }
+
                             targetLeft = trayRelativeLeft - taskbar.TaskbarMonitorControl.Width - marginFromTray;
+                            if (targetLeft < 0) targetLeft = 0;
                         }
                         else
                         {
-                            int fallbackOffset = offset.Width > 0 ? offset.Width : (taskbar.IsMainTaskbar ? 200 : 120);
-                            targetLeft = rect.Width - taskbar.TaskbarMonitorControl.Width - fallbackOffset - marginFromTray;
+                            targetLeft = 0;
                         }
 
-                        if (targetLeft < 0) targetLeft = 0;
+                        if (taskbar.TaskbarMonitorControl.Left != targetLeft)
+                        {
+                            taskbar.TaskbarMonitorControl.Left = targetLeft;
+                        }
+
+                        taskbar.PreviousLeft = targetLeft;
+                        BLL.WindowList.InvalidateRect(taskbar.TargetWnd, IntPtr.Zero, true);
                     }
-                    else
-                    {
-                        targetLeft = 0;
-                    }
+                    catch { }
+                };
 
-                    taskbar.TaskbarMonitorControl.Left = targetLeft;
+                if (taskbar.TaskbarMonitorControl.InvokeRequired)
+                {
+                    taskbar.TaskbarMonitorControl.BeginInvoke(applyPos);
+                }
+                else
+                {
+                    applyPos();
+                }
 
-                    RECT recDiff = new RECT();
-                    recDiff.left = Math.Min(taskbar.PreviousLeft, targetLeft) - 10;
-                    recDiff.top = 0;
-                    recDiff.right = rect.Width;
-                    recDiff.bottom = rect.Bottom;
-
-                    taskbar.PreviousLeft = targetLeft;
-
-                    int rawsize = Marshal.SizeOf(recDiff);
-                    IntPtr ptr = Marshal.AllocHGlobal(rawsize);
-
-                    Marshal.StructureToPtr(recDiff, ptr, true);
-                     
-                    var ret = BLL.WindowList.InvalidateRect(taskbar.TargetWnd, ptr, true);
-                    Marshal.DestroyStructure(ptr, typeof(RECT));
-                });
-
+                taskbar.PreviousRect = offset;
             }
-            
-            taskbar.PreviousRect = offset;
+            catch (Exception ex)
+            {
+                Debug.WriteLine("UpdatePosition error: " + ex.Message);
+            }
+            finally
+            {
+                isUpdatingPosition = false;
+            }
         }
         
         public bool AddControlsToTaskbars()
@@ -209,14 +217,14 @@ namespace TaskbarMonitor
             if (BLL.WindowsInformation.IsWindows11())
             {
                 taskbarClass = "Shell_SecondaryTrayWnd";
+                trayClass = "Windows.UI.Composition.DesktopWindowContentBridge";
 
                 var taskbarsAreas = windowListExtended.Where(w => w.Class == taskbarClass).ToList();
 
                 foreach (var tbArea in taskbarsAreas)
                 {
-                    IntPtr clockHandle = WindowList.FindRightmostChild(tbArea.Handle);
-                    WindowInformation clockArea = clockHandle != IntPtr.Zero 
-                        ? (tbArea.ChildWindows.FirstOrDefault(x => x.Handle == clockHandle) ?? new WindowInformation { Handle = clockHandle })
+                    var clockArea = (!WindowsInformation.IsWindows11_22621() && tbArea.ChildWindows != null) 
+                        ? tbArea.ChildWindows.Where(x => x.Class == trayClass).LastOrDefault() 
                         : null;
                     everythingOK &= AddControlToTaskbar(tbArea, clockArea, false);
                 }
@@ -322,11 +330,7 @@ namespace TaskbarMonitor
 
             taskbarMonitorControl.SizeChanged += (s, e) =>
             {
-                UpdatePosition(tb, true);
-            };
-            taskbarMonitorControl.OnChangeSize += (newSz) =>
-            {
-                UpdatePosition(tb, true);
+                UpdatePosition(tb, false);
             };
 
             UpdatePosition(tb, true);
@@ -464,10 +468,10 @@ namespace TaskbarMonitor
         {
             if (accEvent == AccessibleEvents.LocationChange)
             {
-                var taskbar = TaskbarList.Where(x => x.TrayWnd == windowHandle || x.ClockWnd == windowHandle || x.TargetWnd == windowHandle).SingleOrDefault();
+                var taskbar = TaskbarList.Where(x => (x.TrayWnd != IntPtr.Zero && x.TrayWnd == windowHandle) || (x.ClockWnd != IntPtr.Zero && x.ClockWnd == windowHandle)).SingleOrDefault();
                 if (taskbar != null)
                 {
-                    UpdatePosition(taskbar, true);
+                    UpdatePosition(taskbar, false);
                 }
             }
         }
