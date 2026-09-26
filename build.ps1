@@ -109,7 +109,7 @@ Write-Host "  -> Found MSBuild: $msbuild" -ForegroundColor Green
 
 # 2. Restore NuGet Packages
 Write-Host ""
-Write-Host "[2/4] Checking NuGet Dependencies..." -ForegroundColor Yellow
+Write-Host "[2/4] Downloading modern C# Roslyn compiler & dependencies..." -ForegroundColor Yellow
 $nugetPath = Join-Path $ScriptDir "nuget.exe"
 if (!(Test-Path $nugetPath)) {
     Write-Host "  -> Downloading official nuget.exe..." -ForegroundColor Gray
@@ -117,8 +117,17 @@ if (!(Test-Path $nugetPath)) {
     Invoke-WebRequest -Uri "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -OutFile $nugetPath -UseBasicParsing
 }
 
+$packagesDir = Join-Path $ScriptDir "packages"
 Write-Host "  -> Restoring packages..." -ForegroundColor Gray
-& $nugetPath restore $slnPath | Out-Null
+& $nugetPath restore $slnPath -PackagesDirectory $packagesDir | Out-Null
+
+Write-Host "  -> Ensuring Roslyn C# compiler is ready..." -ForegroundColor Gray
+if (!(Test-Path (Join-Path $packagesDir "Microsoft.Net.Compilers.Toolset.4.5.0"))) {
+    & $nugetPath install Microsoft.Net.Compilers.Toolset -Version 4.5.0 -OutputDirectory $packagesDir | Out-Null
+}
+if (!(Test-Path (Join-Path $packagesDir "Microsoft.NETFramework.ReferenceAssemblies.net472.1.0.3"))) {
+    & $nugetPath install Microsoft.NETFramework.ReferenceAssemblies.net472 -Version 1.0.3 -OutputDirectory $packagesDir | Out-Null
+}
 
 # 3. Compile Solution
 Write-Host ""
