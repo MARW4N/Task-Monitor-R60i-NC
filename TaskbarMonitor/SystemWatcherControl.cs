@@ -339,7 +339,7 @@ namespace TaskbarMonitor
                             continue;
                         if (Options.Soundcore?.RenderAsWidgetText ?? true)
                         {
-                            totalWidth += CalculateSoundcoreWidth(Options.Soundcore);
+                            totalWidth += CalculateSoundcoreWidth(Options.Soundcore, soundcore);
                             continue;
                         }
                     }
@@ -434,7 +434,7 @@ namespace TaskbarMonitor
                         if (Options.Soundcore?.RenderAsWidgetText ?? true)
                         {
                             int widgetWidth = drawSoundcoreWidget(formGraphics, graphPosition, graphPositionY, maximumHeight, soundcore, defaultTheme, opt);
-                            graphPosition += widgetWidth + 10;
+                            graphPosition += widgetWidth;
                             if (VerticalTaskbarMode && graphPosition >= this.Size.Width)
                             {
                                 graphPosition = 0;
@@ -609,28 +609,71 @@ namespace TaskbarMonitor
             base.OnPaint(e);
         }
 
-        public static int CalculateSoundcoreWidth(SoundcoreOptions opt)
+        public static int CalculateSoundcoreWidth(SoundcoreOptions opt, Counters.CounterSoundcore soundcore = null)
         {
             float fontSize = opt != null && opt.FontSize > 0 ? opt.FontSize : 9.0f;
+            if (fontSize < 6.0f) fontSize = 6.0f;
+            if (fontSize > 24.0f) fontSize = 24.0f;
             string fontFamily = !string.IsNullOrEmpty(opt?.FontFamily) ? opt.FontFamily : "Segoe UI";
 
-            string sample = "";
-            if (opt?.ShowLeft ?? true) sample += "L: 100%";
-            if (opt?.ShowRight ?? true) sample += (sample.Length > 0 ? " | " : "") + "R: 100%";
-            if (opt?.ShowCase ?? true) sample += (sample.Length > 0 ? " | " : "") + "C: 100%";
-            if (string.IsNullOrEmpty(sample)) sample = "Soundcore: 100%";
-
+            Font font;
             try
             {
-                using (Font f = new Font(fontFamily, fontSize, FontStyle.Bold))
-                {
-                    var sz = TextRenderer.MeasureText(sample, f);
-                    return sz.Width + 24;
-                }
+                font = new Font(fontFamily, fontSize, FontStyle.Bold);
             }
             catch
             {
-                return 240;
+                font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+            }
+
+            using (font)
+            using (Bitmap bmp = new Bitmap(1, 1))
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                if (soundcore != null && !soundcore.IsConnected)
+                {
+                    string offlineText = "Soundcore: ?";
+                    var sz = g.MeasureString(offlineText, font);
+                    return (int)Math.Ceiling(sz.Width) + 12;
+                }
+
+                float curW = 4;
+                bool hasDrawn = false;
+
+                void MeasurePart(string label, string val)
+                {
+                    if (string.IsNullOrEmpty(val)) val = "--";
+
+                    if (hasDrawn)
+                    {
+                        string sep = " | ";
+                        var sepSz = g.MeasureString(sep, font);
+                        curW += sepSz.Width - 1;
+                    }
+                    hasDrawn = true;
+
+                    string prefix = label + ": ";
+                    var prefixSz = g.MeasureString(prefix, font);
+                    curW += prefixSz.Width - 1;
+
+                    var valSz = g.MeasureString(val, font);
+                    curW += valSz.Width + 2;
+                }
+
+                string leftVal = soundcore != null && !string.IsNullOrEmpty(soundcore.LeftBattery) ? soundcore.LeftBattery : "100%";
+                string rightVal = soundcore != null && !string.IsNullOrEmpty(soundcore.RightBattery) ? soundcore.RightBattery : "100%";
+                string caseVal = soundcore != null && !string.IsNullOrEmpty(soundcore.CaseBattery) ? soundcore.CaseBattery : "100%";
+
+                if (opt?.ShowLeft ?? true)
+                    MeasurePart("L", leftVal);
+
+                if (opt?.ShowRight ?? true)
+                    MeasurePart("R", rightVal);
+
+                if (opt?.ShowCase ?? true)
+                    MeasurePart("C", caseVal);
+
+                return Math.Max(40, (int)Math.Ceiling(curW) + 6);
             }
         }
 
@@ -671,19 +714,21 @@ namespace TaskbarMonitor
                     var sz = formGraphics.MeasureString(offlineText, font);
                     formGraphics.DrawString(offlineText, font, brushShadow, new PointF(curX + 1, curY + 1));
                     formGraphics.DrawString(offlineText, font, brushDim, new PointF(curX, curY));
-                    return (int)sz.Width + 12;
+                    return (int)Math.Ceiling(sz.Width) + 12;
                 }
 
                 bool hasDrawn = false;
                 void DrawPart(string label, string val, int percent)
                 {
+                    if (string.IsNullOrEmpty(val)) val = "--";
+
                     if (hasDrawn)
                     {
                         string sep = " | ";
                         var sepSz = formGraphics.MeasureString(sep, font);
                         formGraphics.DrawString(sep, font, brushShadow, new PointF(curX + 1, curY + 1));
                         formGraphics.DrawString(sep, font, brushDim, new PointF(curX, curY));
-                        curX += (int)sepSz.Width - 1;
+                        curX += (int)Math.Ceiling(sepSz.Width) - 1;
                     }
                     hasDrawn = true;
 
@@ -691,7 +736,7 @@ namespace TaskbarMonitor
                     var prefixSz = formGraphics.MeasureString(prefix, font);
                     formGraphics.DrawString(prefix, font, brushShadow, new PointF(curX + 1, curY + 1));
                     formGraphics.DrawString(prefix, font, brushNormal, new PointF(curX, curY));
-                    curX += (int)prefixSz.Width - 1;
+                    curX += (int)Math.Ceiling(prefixSz.Width) - 1;
 
                     bool isLow = percent >= 0 && percent <= (Options?.Soundcore?.LowBatteryThreshold ?? 40);
                     SolidBrush valBrush = isLow ? brushRed : brushNormal;
@@ -699,7 +744,7 @@ namespace TaskbarMonitor
                     var valSz = formGraphics.MeasureString(val, font);
                     formGraphics.DrawString(val, font, brushShadow, new PointF(curX + 1, curY + 1));
                     formGraphics.DrawString(val, font, valBrush, new PointF(curX, curY));
-                    curX += (int)valSz.Width + 2;
+                    curX += (int)Math.Ceiling(valSz.Width) + 2;
                 }
 
                 if (Options?.Soundcore?.ShowLeft ?? true)
@@ -711,7 +756,7 @@ namespace TaskbarMonitor
                 if (Options?.Soundcore?.ShowCase ?? true)
                     DrawPart("C", soundcore.CaseBattery, soundcore.CasePercent);
 
-                return Math.Max(50, curX - x + 6);
+                return Math.Max(40, (curX - x) + 6);
             }
         }
          
